@@ -1,16 +1,141 @@
-# React + Vite
+# BetterWay
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A small React e-commerce demo demonstrating a product listing with filters and a simple cart using React Context. The UI uses utility-first classes (Tailwind CSS classes are present in the codebase) for layout and styling.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Live demo
 
-## React Compiler
+- Live demo: https://better-way-six.vercel.app/
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## What this repo contains
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Product listing with search, category filter and sort
+- Product cards with stock handling and Add to Cart
+- Cart with quantity updates, removal, and localStorage persistence
+- Context-based global state for products and cart (`ProductContext`, `CartContext`)
+- Minimal, component-driven structure
+
+Screenshot of project structure (for reference):
+- src/components/Cart.jsx
+- src/components/FiltersBar.jsx
+- src/components/ProductCard.jsx
+- src/components/ProductList.jsx
+- src/context/CartContext.jsx
+- src/context/ProductContext.jsx
+- src/data/product.js
+- src/App.jsx, src/main.jsx, src/index.css
+
+---
+
+## Tech stack
+
+- React (JSX)
+- Context API (for global state)
+- Tailwind CSS (utility classes appear in components; ensure Tailwind is configured in your setup)
+- localStorage for cart persistence
+
+---
+
+## Features
+
+- Search products by title
+- Filter by category
+- Sort by price (low→high, high→low)
+- Add to cart (prevents adding beyond stock)
+- Update cart item quantities (bounded by stock)
+- Remove items from cart
+- Cart persisted to `localStorage`
+
+---
+
+
+
+## How components fit together
+
+The app root mounts context providers in `main.jsx`:
+
+- `ProductProvider` — provides `useProducts()` hook
+  - `filters` state: `{ search, category, sort }`
+  - `products` derived via memoized filtering & sorting from `src/data/product.js`
+  - `setFilters`, `clearFilters`
+
+- `CartProvider` — provides `useCart()` hook
+  - `cartItems` persisted to `localStorage` (`localStorage.getItem("cart")`)
+  - `addToCart(product)` — increments existing quantity (bounded by `product.stock`) or adds new item
+  - `updateQuantity(id, qty)` — updates quantity (bounded by stock and min 1)
+  - `removeFromCart(id)` — removes item
+
+Typical component layout in `App.jsx`:
+
+- `FiltersBar` — search input, category select, sort select, clear button
+- `ProductList` — maps `products` to `ProductCard`
+- `ProductCard` — shows product info, stock badge, Add to Cart button (disabled when out of stock)
+- `Cart` — shows cart items, quantity inputs, remove button, totals
+
+Example hooks usage:
+```js
+import { useProducts } from "./context/ProductContext";
+import { useCart } from "./context/CartContext";
+
+const { products, filters, setFilters } = useProducts();
+const { cartItems, addToCart, updateQuantity } = useCart();
+```
+
+---
+
+## Project structure
+
+(src/ - important files)
+
+- components/
+  - Cart.jsx
+  - FiltersBar.jsx
+  - ProductCard.jsx
+  - ProductList.jsx
+- context/
+  - CartContext.jsx
+  - ProductContext.jsx
+- data/
+  - product.js (seed product data)
+- App.jsx
+- main.jsx
+- index.css
+
+---
+
+## How to add products
+
+Open `src/data/product.js` and add product objects with fields the components expect, for example:
+
+```js
+export const products = [
+  {
+    id: "p1",
+    title: "Wireless Headphones",
+    category: "Electronics",
+    price: 1999,
+    stock: 10,
+  },
+  // ...
+];
+```
+
+Fields used by UI:
+- id (string or number)
+- title (string)
+- category (string)
+- price (number)
+- stock (number)
+
+---
+
+## Local Storage / Persistence
+
+- Cart reads from `localStorage.getItem("cart")` on initialization.
+- Cart writes to `localStorage` whenever `cartItems` changes.
+- This preserves the cart between page reloads.
+
+---
